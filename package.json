@@ -9,6 +9,7 @@
     "lint": "eslint",
     "test": "node scripts/test.js",
     "test:e2e": "node scripts/e2e-test.js",
+    "test:integration": "node scripts/test-integration.js",
     "verify": "./scripts/verify.sh"
   },
   "dependencies": {
