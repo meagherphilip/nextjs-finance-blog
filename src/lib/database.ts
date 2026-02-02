@@ -388,3 +388,96 @@ export function updateGeneration(id: string, data: {
   db.prepare(`UPDATE generations SET ${sets.join(', ')} WHERE id = ?`).run(...values);
   return getGenerationById(id);
 }
+
+// Initialize research tables
+db?.exec(`
+  CREATE TABLE IF NOT EXISTS research (
+    id TEXT PRIMARY KEY,
+    query TEXT NOT NULL,
+    topic TEXT NOT NULL,
+    sources TEXT,
+    key_stats TEXT,
+    quotes TEXT,
+    summary TEXT,
+    credibility_score REAL,
+    used_in TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    expires_at DATETIME
+  )
+`);
+
+// Research functions
+export function createResearch(data: {
+  query: string;
+  topic: string;
+  sources?: string;
+  key_stats?: string;
+  quotes?: string;
+  summary?: string;
+  credibility_score?: number;
+}) {
+  const db = getDb();
+  const id = uuidv4();
+  
+  // Set expiration to 30 days from now
+  const expiresAt = new Date();
+  expiresAt.setDate(expiresAt.getDate() + 30);
+  
+  db.prepare(`
+    INSERT INTO research (id, query, topic, sources, key_stats, quotes, summary, credibility_score, expires_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(
+    id,
+    data.query,
+    data.topic,
+    data.sources || null,
+    data.key_stats || null,
+    data.quotes || null,
+    data.summary || null,
+    data.credibility_score || null,
+    expiresAt.toISOString()
+  );
+  
+  return getResearchById(id);
+}
+
+export function getResearchById(id: string) {
+  const db = getDb();
+  const research = db.prepare('SELECT * FROM research WHERE id = ?').get(id) as any;
+  if (research) {
+    research.sources = research.sources ? JSON.parse(research.sources) : [];
+    research.key_stats = research.key_stats ? JSON.parse(research.key_stats) : [];
+    research.quotes = research.quotes ? JSON.parse(research.quotes) : [];
+    research.used_in = research.used_in ? JSON.parse(research.used_in) : [];
+  }
+  return research;
+}
+
+export function getResearchByTopic(topic: string) {
+  const db = getDb();
+  const researchItems = db.prepare(
+    "SELECT * FROM research WHERE topic LIKE ? AND (expires_at > datetime('now') OR expires_at IS NULL) ORDER BY created_at DESC"
+  ).all(`%${topic}%`) as any[];
+  
+  return researchItems.map(r => ({
+    ...r,
+    sources: r.sources ? JSON.parse(r.sources) : [],
+    key_stats: r.key_stats ? JSON.parse(r.key_stats) : [],
+    quotes: r.quotes ? JSON.parse(r.quotes) : [],
+    used_in: r.used_in ? JSON.parse(r.used_in) : [],
+  }));
+}
+
+export function linkResearchToBlog(researchId: string, blogId: string) {
+  const db = getDb();
+  const research = getResearchById(researchId);
+  if (!research) return null;
+  
+  const usedIn = [...research.used_in, blogId];
+  db.prepare('UPDATE research SET used_in = ? WHERE id = ?').run(
+    JSON.stringify(usedIn),
+    researchId
+  );
+  
+  return getResearchById(researchId);
+}

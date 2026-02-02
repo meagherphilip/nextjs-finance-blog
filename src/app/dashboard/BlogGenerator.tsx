@@ -10,7 +10,9 @@ export default function BlogGenerator({ onBlogCreated }: BlogGeneratorProps) {
   const [topic, setTopic] = useState('');
   const [keywords, setKeywords] = useState('');
   const [tone, setTone] = useState('professional');
+  const [voice, setVoice] = useState('expert');
   const [targetLength, setTargetLength] = useState('medium');
+  const [includeResearch, setIncludeResearch] = useState(true);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [error, setError] = useState('');
@@ -29,7 +31,9 @@ export default function BlogGenerator({ onBlogCreated }: BlogGeneratorProps) {
           topic,
           keywords: keywords.split(',').map(k => k.trim()).filter(Boolean),
           tone,
+          voice,
           targetLength: targetLength === 'short' ? 1000 : targetLength === 'medium' ? 2000 : 3000,
+          researchTopic: includeResearch,
         }),
       });
 
@@ -76,7 +80,10 @@ export default function BlogGenerator({ onBlogCreated }: BlogGeneratorProps) {
   return (
     <div className="max-w-2xl mx-auto">
       <div className="bg-white shadow rounded-lg p-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-6">Generate New Blog</h2>
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">Generate New Blog</h2>
+        <p className="text-gray-600 mb-6">
+          Create AI-powered, research-backed blog posts with first-person voice.
+        </p>
         
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
@@ -109,6 +116,25 @@ export default function BlogGenerator({ onBlogCreated }: BlogGeneratorProps) {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
+                Voice
+              </label>
+              <select
+                value={voice}
+                onChange={(e) => setVoice(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="expert">Expert Authority</option>
+                <option value="experienced">Been-There-Done-That</option>
+                <option value="curious">Curious Explorer</option>
+                <option value="skeptical">Healthy Skeptic</option>
+              </select>
+              <p className="text-xs text-gray-500 mt-1">
+                First-person perspective with personality
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
                 Tone
               </label>
               <select
@@ -122,7 +148,9 @@ export default function BlogGenerator({ onBlogCreated }: BlogGeneratorProps) {
                 <option value="authoritative">Authoritative</option>
               </select>
             </div>
+          </div>
 
+          <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Target Length
@@ -137,6 +165,19 @@ export default function BlogGenerator({ onBlogCreated }: BlogGeneratorProps) {
                 <option value="long">Long (~3,000 words)</option>
               </select>
             </div>
+
+            <div className="flex items-center pt-6">
+              <input
+                type="checkbox"
+                id="research"
+                checked={includeResearch}
+                onChange={(e) => setIncludeResearch(e.target.checked)}
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              />
+              <label htmlFor="research" className="ml-2 block text-sm text-gray-700">
+                Include web research & citations
+              </label>
+            </div>
           </div>
 
           {error && (
@@ -149,7 +190,7 @@ export default function BlogGenerator({ onBlogCreated }: BlogGeneratorProps) {
             <div className="bg-blue-50 text-blue-700 p-3 rounded text-sm">
               Generation started! ID: {result.generationId}
               <br />
-              This may take 2-3 minutes for longer articles...
+              This takes 3-6 minutes. Research → Outline → Writing → Review
             </div>
           )}
 
@@ -171,14 +212,39 @@ export default function BlogGenerator({ onBlogCreated }: BlogGeneratorProps) {
             )}
           </button>
         </form>
-      </div>
 
-      <div className="mt-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-        <h3 className="text-sm font-medium text-yellow-800 mb-2">Phase 1: Foundation Mode</h3>
-        <p className="text-sm text-yellow-700">
-          Currently generating basic blog outlines. Full research integration, 
-          first-person voice, and long-form content coming in Phase 2-3.
-        </p>
+        <div className="mt-8 border-t pt-6">
+          <h3 className="text-sm font-medium text-gray-900 mb-3">Generation Pipeline</h3>
+          <div className="space-y-2 text-sm text-gray-600">
+            <div className="flex items-center">
+              <span className="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs mr-2">1</span>
+              <span>Research - Web search for current data & statistics</span>
+            </div>
+            <div className="flex items-center">
+              <span className="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs mr-2">2</span>
+              <span>Outline - Structure with sections and word counts</span>
+            </div>
+            <div className="flex items-center">
+              <span className="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs mr-2">3</span>
+              <span>Writing - First-person voice with personality</span>
+            </div>
+            <div className="flex items-center">
+              <span className="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs mr-2">4</span>
+              <span>Review - Quality check & assembly</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+          <h4 className="text-sm font-medium text-yellow-800 mb-2">Quality Standards</h4>
+          <ul className="text-sm text-yellow-700 space-y-1">
+            <li>✓ 2,000-3,000 words with data & citations</li>
+            <li>✓ First-person perspective (I, me, my)</li>
+            <li>✓ Research-backed with 5+ sources</li>
+            <li>✓ Personal opinions & expertise</li>
+            <li>✓ Anti-AI detection techniques</li>
+          </ul>
+        </div>
       </div>
     </div>
   );
