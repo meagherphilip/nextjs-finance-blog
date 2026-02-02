@@ -1,36 +1,88 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Finance & Investing Blog
+
+A modern blog built with Next.js, TypeScript, SQLite, and Tailwind CSS. Features 10 SEO-optimized finance articles with structured data for search engines and AI crawlers.
+
+## Features
+
+- 🚀 **Next.js 16** with App Router
+- 📊 **SQLite Database** for content management
+- 🎨 **Tailwind CSS** for styling
+- 🔍 **SEO Optimized**:
+  - Dynamic meta tags for each post
+  - Open Graph tags for social sharing
+  - JSON-LD structured data (Schema.org)
+  - Auto-generated sitemap.xml
+  - robots.txt for crawler guidance
+- 📝 **10 Finance Articles** covering investing, budgeting, retirement, and more
+- 🔄 **REST API** for posts
+
+## Tech Stack
+
+- Next.js 16
+- TypeScript
+- SQLite (better-sqlite3)
+- Tailwind CSS
+- Node.js 23+
 
 ## Getting Started
 
-First, run the development server:
-
 ```bash
+# Install dependencies
+npm install
+
+# Seed the database with finance posts
+npm run seed
+
+# Run development server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) to view the blog.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## API Endpoints
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- `GET /api/posts` - List all posts
+- `GET /api/posts/[slug]` - Get specific post
+- `POST /api/seed` - Reseed database
 
-## Learn More
+## SEO Configuration
 
-To learn more about Next.js, take a look at the following resources:
+Before deploying, update these files with your actual domain:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. `src/lib/metadata.ts` - Change `yourdomain.com` to your actual domain
+2. `src/lib/schema.ts` - Change `yourdomain.com` to your actual domain
+3. `src/app/sitemap.ts` - Change `yourdomain.com` to your actual domain
+4. `src/app/robots.ts` - Change `yourdomain.com` to your actual domain
+5. `src/app/layout.tsx` - Update Google Search Console verification code
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Deployment
 
-## Deploy on Vercel
+The app outputs to standalone mode for easy deployment on:
+- Vercel
+- Railway
+- DigitalOcean App Platform
+- Any Docker host
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+# Build for production
+npm run build
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Content
+
+All 10 articles focus on personal finance and investing:
+
+1. Understanding Compound Interest
+2. Building an Emergency Fund
+3. Index Funds vs Individual Stocks
+4. The 50/30/20 Budget Rule
+5. IRA vs 401(k) Explained
+6. Credit Scores Demystified
+7. Dollar-Cost Averaging
+8. The FIRE Movement
+9. Understanding Inflation
+10. Debt Avalanche vs Snowball
+
+---
+
+Built with 🔧 by EM38Bot
