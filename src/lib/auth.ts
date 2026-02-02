@@ -1,21 +1,24 @@
-import { NextAuthOptions } from 'next-auth';
-import CredentialsProvider from 'next-auth/providers/credentials';
-import { validateUser } from './database';
+import NextAuth from "next-auth";
+import Credentials from "next-auth/providers/credentials";
+import { validateUser } from "./database";
 
-export const authOptions: NextAuthOptions = {
+export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
-    CredentialsProvider({
-      name: 'Credentials',
+    Credentials({
       credentials: {
-        email: { label: 'Email', type: 'email' },
-        password: { label: 'Password', type: 'password' }
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" },
       },
-      async authorize(credentials) {
+      authorize: async (credentials) => {
         if (!credentials?.email || !credentials?.password) {
           return null;
         }
         
-        const user = await validateUser(credentials.email, credentials.password);
+        const user = await validateUser(
+          credentials.email as string, 
+          credentials.password as string
+        );
+        
         if (!user) {
           return null;
         }
@@ -25,32 +28,32 @@ export const authOptions: NextAuthOptions = {
           email: user.email,
           name: user.name,
           image: user.image,
-          role: user.role
+          role: user.role,
         };
-      }
-    })
+      },
+    }),
   ],
+  pages: {
+    signIn: "/login",
+    error: "/login",
+  },
   session: {
-    strategy: 'jwt',
-    maxAge: 30 * 24 * 60 * 60 // 30 days
+    strategy: "jwt",
+    maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   callbacks: {
-    async jwt({ token, user }) {
+    jwt({ token, user }) {
       if (user) {
         token.role = user.role;
       }
       return token;
     },
-    async session({ session, token }) {
-      if (token) {
+    session({ session, token }) {
+      if (token && session.user) {
         session.user.id = token.sub;
         session.user.role = token.role as string;
       }
       return session;
-    }
+    },
   },
-  pages: {
-    signIn: '/login',
-    error: '/login'
-  }
-};
+});

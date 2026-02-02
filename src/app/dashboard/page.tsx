@@ -1,14 +1,13 @@
-import { getServerSession } from 'next-auth';
-import { redirect } from 'next/navigation';
-import { authOptions } from '@/lib/auth';
-import { getAllBlogs, getAllThemes } from '@/lib/database';
-import DashboardClient from './DashboardClient';
+import { auth } from "@/lib/auth";
+import { redirect } from "next/navigation";
+import { getAllBlogs, getAllThemes } from "@/lib/database";
+import DashboardClient from "./DashboardClient";
 
 export default async function DashboardPage() {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   
   if (!session?.user) {
-    redirect('/login');
+    redirect("/login");
   }
   
   const blogs = getAllBlogs();
