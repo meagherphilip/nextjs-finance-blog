@@ -6,7 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "node scripts/test.js",
+    "test:e2e": "node scripts/e2e-test.js",
+    "verify": "./scripts/verify.sh"
   },
   "dependencies": {
     "@types/bcryptjs": "^2.4.6",
