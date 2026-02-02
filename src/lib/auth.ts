@@ -9,12 +9,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
       },
-      authorize: async (credentials) => {
+      authorize: (credentials) => {
         if (!credentials?.email || !credentials?.password) {
           return null;
         }
         
-        const user = await validateUser(
+        const user = validateUser(
           credentials.email as string, 
           credentials.password as string
         );

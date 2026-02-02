@@ -108,7 +108,9 @@ function initDb() {
   // Insert default admin user (password: admin123)
   const adminExists = db.prepare('SELECT id FROM users WHERE email = ?').get('admin@example.com');
   if (!adminExists) {
-    const hashedPassword = hash('admin123', 10);
+    // Use synchronous hash
+    const bcrypt = require('bcryptjs');
+    const hashedPassword = bcrypt.hashSync('admin123', 10);
     db.prepare(`
       INSERT INTO users (id, email, name, password_hash, role)
       VALUES (?, ?, ?, ?, ?)
@@ -118,10 +120,11 @@ function initDb() {
 }
 
 // User functions
-export async function createUser(email: string, name: string, password: string) {
+export function createUser(email: string, name: string, password: string) {
   const db = getDb();
   const id = uuidv4();
-  const hashedPassword = await hash(password, 10);
+  const bcrypt = require('bcryptjs');
+  const hashedPassword = bcrypt.hashSync(password, 10);
   
   try {
     db.prepare(`
@@ -134,13 +137,14 @@ export async function createUser(email: string, name: string, password: string) 
   }
 }
 
-export async function validateUser(email: string, password: string) {
+export function validateUser(email: string, password: string) {
   const db = getDb();
   const user = db.prepare('SELECT * FROM users WHERE email = ?').get(email) as any;
   
   if (!user) return null;
   
-  const valid = await compare(password, user.password_hash);
+  const bcrypt = require('bcryptjs');
+  const valid = bcrypt.compareSync(password, user.password_hash);
   if (!valid) return null;
   
   return {
