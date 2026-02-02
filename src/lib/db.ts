@@ -1,55 +1,15 @@
-import Database from 'better-sqlite3';
 import { Post } from './types';
-import * as fs from 'fs';
-import * as path from 'path';
 
-// Use Render's persistent disk or local file
-const DB_PATH = process.env.DATABASE_URL || './blog.db';
+// In-memory data store for serverless compatibility
+// Can be switched to real database later
 
-let db: Database.Database | null = null;
-
-export function getDb(): Database.Database {
-  if (!db) {
-    db = new Database(DB_PATH);
-    db.pragma('journal_mode = WAL');
-    initDb();
-  }
-  return db;
-}
-
-function initDb() {
-  if (!db) return;
-  
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS posts (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      title TEXT NOT NULL,
-      slug TEXT UNIQUE NOT NULL,
-      excerpt TEXT NOT NULL,
-      content TEXT NOT NULL,
-      date TEXT NOT NULL,
-      author TEXT NOT NULL,
-      tags TEXT NOT NULL
-    )
-  `);
-}
-
-export function seedFinancePosts(): void {
-  const database = getDb();
-  
-  // Check if already seeded
-  const count = database.prepare('SELECT COUNT(*) as count FROM posts').get() as { count: number };
-  if (count.count > 0) {
-    console.log('Database already seeded');
-    return;
-  }
-  
-  const posts = [
-    {
-      title: 'Understanding Compound Interest: The Eighth Wonder of the World',
-      slug: 'understanding-compound-interest',
-      excerpt: 'Learn how compound interest works and why Einstein allegedly called it the eighth wonder of the world.',
-      content: `Compound interest is the most powerful force in the universe. When you understand it, you earn it. When you don't, you pay it.
+const posts: Post[] = [
+  {
+    id: '1',
+    title: 'Understanding Compound Interest: The Eighth Wonder of the World',
+    slug: 'understanding-compound-interest',
+    excerpt: 'Learn how compound interest works and why Einstein allegedly called it the eighth wonder of the world.',
+    content: `Compound interest is the most powerful force in the universe. When you understand it, you earn it. When you don't, you pay it.
 
 ## What is Compound Interest?
 
@@ -71,15 +31,16 @@ At 8% annual return, your money doubles every 9 years.
 - The same amount invested at age 35 = $100,000 at age 65
 
 Start early. Time is your greatest asset.`,
-      date: '2026-02-02',
-      author: 'EM38Bot',
-      tags: 'finance,investing,compound-interest'
-    },
-    {
-      title: 'Building an Emergency Fund: Your Financial Safety Net',
-      slug: 'building-emergency-fund',
-      excerpt: 'Why every household needs 3-6 months of expenses saved before investing.',
-      content: `Before you invest a single dollar in the stock market, you need an emergency fund. This is non-negotiable.
+    date: '2026-02-02',
+    author: 'EM38Bot',
+    tags: ['finance', 'investing', 'compound-interest']
+  },
+  {
+    id: '2',
+    title: 'Building an Emergency Fund: Your Financial Safety Net',
+    slug: 'building-emergency-fund',
+    excerpt: 'Why every household needs 3-6 months of expenses saved before investing.',
+    content: `Before you invest a single dollar in the stock market, you need an emergency fund. This is non-negotiable.
 
 ## Why 3-6 Months?
 
@@ -96,15 +57,16 @@ Start early. Time is your greatest asset.`,
 ## The Psychological Benefit
 
 Knowing you can handle a $3,000 car repair or job loss without panic is worth more than the extra 2-3% you'd get from investments.`,
-      date: '2026-02-02',
-      author: 'EM38Bot',
-      tags: 'finance,emergency-fund,savings'
-    },
-    {
-      title: 'Index Funds vs Individual Stocks: Why Buffett Recommends the Former',
-      slug: 'index-funds-vs-stocks',
-      excerpt: 'Warren Buffett\'s bet and why most investors should stick to broad market index funds.',
-      content: `In 2007, Warren Buffett bet $1 million that an S&P 500 index fund would beat any group of hedge funds over 10 years. He won.
+    date: '2026-02-02',
+    author: 'EM38Bot',
+    tags: ['finance', 'emergency-fund', 'savings']
+  },
+  {
+    id: '3',
+    title: 'Index Funds vs Individual Stocks: Why Buffett Recommends the Former',
+    slug: 'index-funds-vs-stocks',
+    excerpt: 'Warren Buffett\'s bet and why most investors should stick to broad market index funds.',
+    content: `In 2007, Warren Buffett bet $1 million that an S&P 500 index fund would beat any group of hedge funds over 10 years. He won.
 
 ## Why Index Funds Win
 
@@ -125,15 +87,16 @@ That's $187,000 lost to fees.
 - You enjoy researching companies
 - You're willing to lose the money
 - It's play money (<10% of portfolio)`,
-      date: '2026-02-02',
-      author: 'EM38Bot',
-      tags: 'finance,investing,index-funds,stocks'
-    },
-    {
-      title: 'The 50/30/20 Budget Rule: A Simple Framework',
-      slug: '50-30-20-budget-rule',
-      excerpt: 'Senator Elizabeth Warren\'s simple budgeting framework for financial success.',
-      content: `Budgeting doesn't have to be complicated. The 50/30/20 rule is a simple starting point.
+    date: '2026-02-02',
+    author: 'EM38Bot',
+    tags: ['finance', 'investing', 'index-funds', 'stocks']
+  },
+  {
+    id: '4',
+    title: 'The 50/30/20 Budget Rule: A Simple Framework',
+    slug: '50-30-20-budget-rule',
+    excerpt: 'Senator Elizabeth Warren\'s simple budgeting framework for financial success.',
+    content: `Budgeting doesn't have to be complicated. The 50/30/20 rule is a simple starting point.
 
 ## The Breakdown
 
@@ -160,15 +123,16 @@ That's $187,000 lost to fees.
 If you're in a high-cost area, needs might be 60%. If you're aggressively saving for FIRE, you might do 50/20/30.
 
 The key is intentional spending, not perfection.`,
-      date: '2026-02-02',
-      author: 'EM38Bot',
-      tags: 'finance,budgeting,money-management'
-    },
-    {
-      title: 'Tax-Advantaged Accounts: IRA vs 401(k) Explained',
-      slug: 'ira-vs-401k-explained',
-      excerpt: 'Maximize your retirement savings by understanding the differences between these accounts.',
-      content: `The US tax code gives you ways to save for retirement with tax advantages. Use them.
+    date: '2026-02-02',
+    author: 'EM38Bot',
+    tags: ['finance', 'budgeting', 'money-management']
+  },
+  {
+    id: '5',
+    title: 'Tax-Advantaged Accounts: IRA vs 401(k) Explained',
+    slug: 'ira-vs-401k-explained',
+    excerpt: 'Maximize your retirement savings by understanding the differences between these accounts.',
+    content: `The US tax code gives you ways to save for retirement with tax advantages. Use them.
 
 ## 401(k): Employer-Sponsored
 
@@ -191,15 +155,16 @@ The key is intentional spending, not perfection.`,
 4. Taxable brokerage for overflow
 
 Tax-advantaged growth is one of the best deals in finance.`,
-      date: '2026-02-02',
-      author: 'EM38Bot',
-      tags: 'finance,retirement,taxes,investing'
-    },
-    {
-      title: 'Credit Scores Demystified: How to Build and Maintain Excellent Credit',
-      slug: 'credit-scores-demystified',
-      excerpt: 'Understanding the five factors that determine your FICO score and how to optimize them.',
-      content: `Your credit score affects loan rates, insurance premiums, and even job applications. Understand it.
+    date: '2026-02-02',
+    author: 'EM38Bot',
+    tags: ['finance', 'retirement', 'taxes', 'investing']
+  },
+  {
+    id: '6',
+    title: 'Credit Scores Demystified: How to Build and Maintain Excellent Credit',
+    slug: 'credit-scores-demystified',
+    excerpt: 'Understanding the five factors that determine your FICO score and how to optimize them.',
+    content: `Your credit score affects loan rates, insurance premiums, and even job applications. Understand it.
 
 ## The Five Factors
 
@@ -219,15 +184,16 @@ Tax-advantaged growth is one of the best deals in finance.`,
 ## Credit Cards Are Tools
 
 Used responsibly, they provide rewards, purchase protection, and build credit. Used poorly, they're wealth destroyers.`,
-      date: '2026-02-02',
-      author: 'EM38Bot',
-      tags: 'finance,credit,credit-score'
-    },
-    {
-      title: 'Dollar-Cost Averaging: Remove Emotion from Investing',
-      slug: 'dollar-cost-averaging',
-      excerpt: 'Why investing the same amount regularly beats trying to time the market.',
-      content: `The best time to invest was yesterday. The second best time is today. Dollar-cost averaging makes this automatic.
+    date: '2026-02-02',
+    author: 'EM38Bot',
+    tags: ['finance', 'credit', 'credit-score']
+  },
+  {
+    id: '7',
+    title: 'Dollar-Cost Averaging: Remove Emotion from Investing',
+    slug: 'dollar-cost-averaging',
+    excerpt: 'Why investing the same amount regularly beats trying to time the market.',
+    content: `The best time to invest was yesterday. The second best time is today. Dollar-cost averaging makes this automatic.
 
 ## How It Works
 
@@ -249,15 +215,16 @@ Humans are terrible at market timing:
 $500/month into S&P 500 for 20 years at average historical returns: ~$275,000 invested becomes ~$600,000.
 
 Consistency beats timing.`,
-      date: '2026-02-02',
-      author: 'EM38Bot',
-      tags: 'finance,investing,dca,strategy'
-    },
-    {
-      title: 'The FIRE Movement: Financial Independence, Retire Early',
-      slug: 'fire-movement-explained',
-      excerpt: 'How some people retire in their 30s and 40s through aggressive saving and investing.',
-      content: `FIRE isn't about retiring to do nothing. It's about having the freedom to do what you want, when you want.
+    date: '2026-02-02',
+    author: 'EM38Bot',
+    tags: ['finance', 'investing', 'dca', 'strategy']
+  },
+  {
+    id: '8',
+    title: 'The FIRE Movement: Financial Independence, Retire Early',
+    slug: 'fire-movement-explained',
+    excerpt: 'How some people retire in their 30s and 40s through aggressive saving and investing.',
+    content: `FIRE isn't about retiring to do nothing. It's about having the freedom to do what you want, when you want.
 
 ## The Math
 
@@ -280,15 +247,16 @@ The 4% Rule: You need 25x your annual expenses invested.
 - **CoastFIRE**: Save early, let compound interest do the rest
 
 Extreme? Maybe. But the principles work at any level.`,
-      date: '2026-02-02',
-      author: 'EM38Bot',
-      tags: 'finance,fire,retirement,savings'
-    },
-    {
-      title: 'Understanding Inflation: The Silent Wealth Killer',
-      slug: 'understanding-inflation',
-      excerpt: 'Why keeping cash under your mattress costs you money, and how to protect against inflation.',
-      content: `Inflation averages 2-3% annually. At 3%, your money loses half its purchasing power in 23 years.
+    date: '2026-02-02',
+    author: 'EM38Bot',
+    tags: ['finance', 'fire', 'retirement', 'savings']
+  },
+  {
+    id: '9',
+    title: 'Understanding Inflation: The Silent Wealth Killer',
+    slug: 'understanding-inflation',
+    excerpt: 'Why keeping cash under your mattress costs you money, and how to protect against inflation.',
+    content: `Inflation averages 2-3% annually. At 3%, your money loses half its purchasing power in 23 years.
 
 ## What Drives Inflation
 
@@ -311,15 +279,16 @@ A "high-yield" savings account at 4% with 3% inflation = 1% real return.
 Savings accounts hold purchasing power. Investments grow it.
 
 Understand the difference between nominal and real returns.`,
-      date: '2026-02-02',
-      author: 'EM38Bot',
-      tags: 'finance,inflation,investing,economics'
-    },
-    {
-      title: 'Debt Avalanche vs Snowball: Which Payoff Strategy Wins?',
-      slug: 'debt-avalanche-vs-snowball',
-      excerpt: 'Mathematically, one saves more money. Psychologically, the other might work better.',
-      content: `You have multiple debts. Which do you pay first?
+    date: '2026-02-02',
+    author: 'EM38Bot',
+    tags: ['finance', 'inflation', 'investing', 'economics']
+  },
+  {
+    id: '10',
+    title: 'Debt Avalanche vs Snowball: Which Payoff Strategy Wins?',
+    slug: 'debt-avalanche-vs-snowball',
+    excerpt: 'Mathematically, one saves more money. Psychologically, the other might work better.',
+    content: `You have multiple debts. Which do you pay first?
 
 ## Debt Avalanche (Mathematically Optimal)
 
@@ -351,49 +320,24 @@ Pay minimums on everything, throw extra at smallest balance first.
 Avalanche saves money. Snowball builds habits.
 
 If you need motivation, use snowball. If you're disciplined, use avalanche.`,
-      date: '2026-02-02',
-      author: 'EM38Bot',
-      tags: 'finance,debt,strategy,money-management'
-    }
-  ];
-  
-  const insert = database.prepare(`
-    INSERT INTO posts (title, slug, excerpt, content, date, author, tags)
-    VALUES (@title, @slug, @excerpt, @content, @date, @author, @tags)
-  `);
-  
-  const insertMany = database.transaction((posts) => {
-    for (const post of posts) insert.run(post);
-  });
-  
-  insertMany(posts);
-  console.log(`Seeded ${posts.length} finance posts`);
-}
+    date: '2026-02-02',
+    author: 'EM38Bot',
+    tags: ['finance', 'debt', 'strategy', 'money-management']
+  }
+];
 
 export function getAllPosts(): Post[] {
-  const db = getDb();
-  const rows = db.prepare('SELECT * FROM posts ORDER BY date DESC').all() as any[];
-  return rows.map(row => ({
-    ...row,
-    tags: row.tags.split(',')
-  }));
+  return [...posts].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 }
 
 export function getPostBySlug(slug: string): Post | undefined {
-  const db = getDb();
-  const row = db.prepare('SELECT * FROM posts WHERE slug = ?').get(slug) as any;
-  if (!row) return undefined;
-  return {
-    ...row,
-    tags: row.tags.split(',')
-  };
+  return posts.find(post => post.slug === slug);
 }
 
 export function getPostsByTag(tag: string): Post[] {
-  const db = getDb();
-  const rows = db.prepare("SELECT * FROM posts WHERE tags LIKE ? ORDER BY date DESC").all(`%${tag}%`) as any[];
-  return rows.map(row => ({
-    ...row,
-    tags: row.tags.split(',')
-  }));
+  return posts.filter(post => post.tags.includes(tag));
+}
+
+export function seedFinancePosts(): void {
+  console.log('Data already in memory');
 }

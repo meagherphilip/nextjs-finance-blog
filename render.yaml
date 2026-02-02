@@ -8,26 +8,3 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
-      - key: DATABASE_URL
-        value: /data/blog.db
-    disk:
-      name: data
-      mountPath: /data
-      sizeGB: 1
-
-  - type: cron
-    name: daily-content-update
-    runtime: node
-    plan: free
-    schedule: "0 9 * * *"
-    buildCommand: npm install
-    startCommand: node scripts/daily-update.js
-    envVars:
-      - key: NODE_ENV
-        value: production
-      - key: DATABASE_URL
-        value: /data/blog.db
-    disk:
-      name: data
-      mountPath: /data
-      sizeGB: 1
