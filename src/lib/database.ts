@@ -104,6 +104,23 @@ function initDb() {
       FOREIGN KEY (theme_id) REFERENCES themes(id)
     )
   `);
+
+  // Research table (stores web search results)
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS research (
+      id TEXT PRIMARY KEY,
+      query TEXT NOT NULL,
+      topic TEXT NOT NULL,
+      sources TEXT,
+      key_stats TEXT,
+      quotes TEXT,
+      summary TEXT,
+      credibility_score REAL,
+      used_in TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      expires_at DATETIME
+    )
+  `);
   
   // Insert default admin user (password: admin123)
   const adminExists = db.prepare('SELECT id FROM users WHERE email = ?').get('admin@example.com');
@@ -388,23 +405,6 @@ export function updateGeneration(id: string, data: {
   db.prepare(`UPDATE generations SET ${sets.join(', ')} WHERE id = ?`).run(...values);
   return getGenerationById(id);
 }
-
-// Initialize research tables
-db?.exec(`
-  CREATE TABLE IF NOT EXISTS research (
-    id TEXT PRIMARY KEY,
-    query TEXT NOT NULL,
-    topic TEXT NOT NULL,
-    sources TEXT,
-    key_stats TEXT,
-    quotes TEXT,
-    summary TEXT,
-    credibility_score REAL,
-    used_in TEXT,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    expires_at DATETIME
-  )
-`);
 
 // Research functions
 export function createResearch(data: {
