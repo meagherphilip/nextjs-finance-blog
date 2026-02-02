@@ -1,71 +1,50 @@
 import Database from 'better-sqlite3';
-import { Post } from '../types';
+import { Post } from './types';
+import * as fs from 'fs';
+import * as path from 'path';
 
-const db = new Database('./blog.db');
+// Use Render's persistent disk or local file
+const DB_PATH = process.env.DATABASE_URL || './blog.db';
 
-// Initialize database
-db.exec(`
-  CREATE TABLE IF NOT EXISTS posts (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    title TEXT NOT NULL,
-    slug TEXT UNIQUE NOT NULL,
-    excerpt TEXT NOT NULL,
-    content TEXT NOT NULL,
-    date TEXT NOT NULL,
-    author TEXT NOT NULL,
-    tags TEXT NOT NULL
-  )
-`);
+let db: Database.Database | null = null;
 
-export function getAllPosts(): Post[] {
-  const stmt = db.prepare('SELECT * FROM posts ORDER BY date DESC');
-  const rows = stmt.all() as any[];
-  return rows.map(row => ({
-    ...row,
-    tags: JSON.parse(row.tags)
-  }));
+export function getDb(): Database.Database {
+  if (!db) {
+    db = new Database(DB_PATH);
+    db.pragma('journal_mode = WAL');
+    initDb();
+  }
+  return db;
 }
 
-export function getPostBySlug(slug: string): Post | undefined {
-  const stmt = db.prepare('SELECT * FROM posts WHERE slug = ?');
-  const row = stmt.get(slug) as any;
-  if (!row) return undefined;
-  return {
-    ...row,
-    tags: JSON.parse(row.tags)
-  };
-}
-
-export function getPostsByTag(tag: string): Post[] {
-  const stmt = db.prepare('SELECT * FROM posts');
-  const rows = stmt.all() as any[];
-  return rows
-    .map(row => ({ ...row, tags: JSON.parse(row.tags) }))
-    .filter(post => post.tags.includes(tag));
-}
-
-export function createPost(post: Omit<Post, 'id'>): Post {
-  const stmt = db.prepare(`
-    INSERT INTO posts (title, slug, excerpt, content, date, author, tags)
-    VALUES (?, ?, ?, ?, ?, ?, ?)
+function initDb() {
+  if (!db) return;
+  
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS posts (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      title TEXT NOT NULL,
+      slug TEXT UNIQUE NOT NULL,
+      excerpt TEXT NOT NULL,
+      content TEXT NOT NULL,
+      date TEXT NOT NULL,
+      author TEXT NOT NULL,
+      tags TEXT NOT NULL
+    )
   `);
-  const result = stmt.run(
-    post.title,
-    post.slug,
-    post.excerpt,
-    post.content,
-    post.date,
-    post.author,
-    JSON.stringify(post.tags)
-  );
-  return { ...post, id: result.lastInsertRowid.toString() };
 }
 
 export function seedFinancePosts(): void {
-  const count = db.prepare('SELECT COUNT(*) as count FROM posts').get() as { count: number };
-  if (count.count > 0) return;
-
-  const financePosts = [
+  const database = getDb();
+  
+  // Check if already seeded
+  const count = database.prepare('SELECT COUNT(*) as count FROM posts').get() as { count: number };
+  if (count.count > 0) {
+    console.log('Database already seeded');
+    return;
+  }
+  
+  const posts = [
     {
       title: 'Understanding Compound Interest: The Eighth Wonder of the World',
       slug: 'understanding-compound-interest',
@@ -94,7 +73,7 @@ At 8% annual return, your money doubles every 9 years.
 Start early. Time is your greatest asset.`,
       date: '2026-02-02',
       author: 'EM38Bot',
-      tags: ['finance', 'investing', 'compound-interest']
+      tags: 'finance,investing,compound-interest'
     },
     {
       title: 'Building an Emergency Fund: Your Financial Safety Net',
@@ -119,7 +98,7 @@ Start early. Time is your greatest asset.`,
 Knowing you can handle a $3,000 car repair or job loss without panic is worth more than the extra 2-3% you'd get from investments.`,
       date: '2026-02-02',
       author: 'EM38Bot',
-      tags: ['finance', 'emergency-fund', 'savings']
+      tags: 'finance,emergency-fund,savings'
     },
     {
       title: 'Index Funds vs Individual Stocks: Why Buffett Recommends the Former',
@@ -148,7 +127,7 @@ That's $187,000 lost to fees.
 - It's play money (<10% of portfolio)`,
       date: '2026-02-02',
       author: 'EM38Bot',
-      tags: ['finance', 'investing', 'index-funds', 'stocks']
+      tags: 'finance,investing,index-funds,stocks'
     },
     {
       title: 'The 50/30/20 Budget Rule: A Simple Framework',
@@ -183,7 +162,7 @@ If you're in a high-cost area, needs might be 60%. If you're aggressively saving
 The key is intentional spending, not perfection.`,
       date: '2026-02-02',
       author: 'EM38Bot',
-      tags: ['finance', 'budgeting', 'money-management']
+      tags: 'finance,budgeting,money-management'
     },
     {
       title: 'Tax-Advantaged Accounts: IRA vs 401(k) Explained',
@@ -214,7 +193,7 @@ The key is intentional spending, not perfection.`,
 Tax-advantaged growth is one of the best deals in finance.`,
       date: '2026-02-02',
       author: 'EM38Bot',
-      tags: ['finance', 'retirement', 'taxes', 'investing']
+      tags: 'finance,retirement,taxes,investing'
     },
     {
       title: 'Credit Scores Demystified: How to Build and Maintain Excellent Credit',
@@ -242,7 +221,7 @@ Tax-advantaged growth is one of the best deals in finance.`,
 Used responsibly, they provide rewards, purchase protection, and build credit. Used poorly, they're wealth destroyers.`,
       date: '2026-02-02',
       author: 'EM38Bot',
-      tags: ['finance', 'credit', 'credit-score']
+      tags: 'finance,credit,credit-score'
     },
     {
       title: 'Dollar-Cost Averaging: Remove Emotion from Investing',
@@ -272,7 +251,7 @@ $500/month into S&P 500 for 20 years at average historical returns: ~$275,000 in
 Consistency beats timing.`,
       date: '2026-02-02',
       author: 'EM38Bot',
-      tags: ['finance', 'investing', 'dca', 'strategy']
+      tags: 'finance,investing,dca,strategy'
     },
     {
       title: 'The FIRE Movement: Financial Independence, Retire Early',
@@ -303,7 +282,7 @@ The 4% Rule: You need 25x your annual expenses invested.
 Extreme? Maybe. But the principles work at any level.`,
       date: '2026-02-02',
       author: 'EM38Bot',
-      tags: ['finance', 'fire', 'retirement', 'savings']
+      tags: 'finance,fire,retirement,savings'
     },
     {
       title: 'Understanding Inflation: The Silent Wealth Killer',
@@ -334,7 +313,7 @@ Savings accounts hold purchasing power. Investments grow it.
 Understand the difference between nominal and real returns.`,
       date: '2026-02-02',
       author: 'EM38Bot',
-      tags: ['finance', 'inflation', 'investing', 'economics']
+      tags: 'finance,inflation,investing,economics'
     },
     {
       title: 'Debt Avalanche vs Snowball: Which Payoff Strategy Wins?',
@@ -374,26 +353,47 @@ Avalanche saves money. Snowball builds habits.
 If you need motivation, use snowball. If you're disciplined, use avalanche.`,
       date: '2026-02-02',
       author: 'EM38Bot',
-      tags: ['finance', 'debt', 'strategy', 'money-management']
+      tags: 'finance,debt,strategy,money-management'
     }
   ];
-
-  const insert = db.prepare(`
+  
+  const insert = database.prepare(`
     INSERT INTO posts (title, slug, excerpt, content, date, author, tags)
-    VALUES (?, ?, ?, ?, ?, ?, ?)
+    VALUES (@title, @slug, @excerpt, @content, @date, @author, @tags)
   `);
+  
+  const insertMany = database.transaction((posts) => {
+    for (const post of posts) insert.run(post);
+  });
+  
+  insertMany(posts);
+  console.log(`Seeded ${posts.length} finance posts`);
+}
 
-  for (const post of financePosts) {
-    insert.run(
-      post.title,
-      post.slug,
-      post.excerpt,
-      post.content,
-      post.date,
-      post.author,
-      JSON.stringify(post.tags)
-    );
-  }
+export function getAllPosts(): Post[] {
+  const db = getDb();
+  const rows = db.prepare('SELECT * FROM posts ORDER BY date DESC').all() as any[];
+  return rows.map(row => ({
+    ...row,
+    tags: row.tags.split(',')
+  }));
+}
 
-  console.log('Seeded 10 finance posts');
+export function getPostBySlug(slug: string): Post | undefined {
+  const db = getDb();
+  const row = db.prepare('SELECT * FROM posts WHERE slug = ?').get(slug) as any;
+  if (!row) return undefined;
+  return {
+    ...row,
+    tags: row.tags.split(',')
+  };
+}
+
+export function getPostsByTag(tag: string): Post[] {
+  const db = getDb();
+  const rows = db.prepare("SELECT * FROM posts WHERE tags LIKE ? ORDER BY date DESC").all(`%${tag}%`) as any[];
+  return rows.map(row => ({
+    ...row,
+    tags: row.tags.split(',')
+  }));
 }
