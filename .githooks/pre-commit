@@ -1,0 +1,15 @@
+#!/bin/bash
+# Pre-commit build check
+# Place this in .git/hooks/pre-commit to run builds before commits
+
+echo "Running build check before commit..."
+
+if ! npm run build > /tmp/build.log 2>&1; then
+    echo "❌ Build failed! Check /tmp/build.log for errors"
+    echo ""
+    tail -50 /tmp/build.log
+    exit 1
+fi
+
+echo "✅ Build successful"
+exit 0
